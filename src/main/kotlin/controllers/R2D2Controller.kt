@@ -64,7 +64,7 @@ object R2D2Controller {
         // Espero a que terminen todas las tareas
         val estadisticas = estadisticasAsync.awaitAll()
         // Creo el informe con las estadísticas
-        informe = Informe(estadisticas)
+        informe = Informe(estadisticas = estadisticas)
         logger.debug { "Informe de resumen estadístico realizado exitosamente" }
         logger.debug { "Datos procesados exitosamente" }
     }
@@ -110,7 +110,7 @@ object R2D2Controller {
             )
         }
         // Ozone
-        val OzoneAsync = myScope.async {
+        val ozoneAsync = myScope.async {
             logger.debug { "Calculando estadísticas..." }
             Resumen(
                 tipo = "Ozone",
@@ -123,12 +123,13 @@ object R2D2Controller {
         }
 
         logger.debug { "Estadísticas calculadas exitosamente" }
+        // Hay un bug en la librería con mapas, por eso lo cambio a listas
         return@coroutineScope Estadistica(
-            resumenes = mapOf(
-                "NO2" to NO2Async.await(),
-                "CO" to COAsync.await(),
-                "Ozone" to OzoneAsync.await(),
-                "Temperatura" to temperaturaAsync.await()
+            resumenes = listOf(
+                NO2Async.await(),
+                COAsync.await(),
+                ozoneAsync.await(),
+                temperaturaAsync.await()
             )
         )
 
@@ -143,7 +144,13 @@ object R2D2Controller {
             Informe.writeToJsonFile(informe, File("data/informe.json"))
         }
 
+        val informeXml = myScope.launch {
+            logger.debug { "Guardando informe en XML..." }
+            Informe.writeToXmlFile(informe, File("data/informe.xml"))
+        }
+
         informeJson.join()
+        informeXml.join()
 
         logger.debug { "Datos salvados exitosamente" }
     }

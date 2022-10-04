@@ -1,9 +1,8 @@
-package models
+package dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import nl.adaptivity.xmlutil.serialization.XML
 import nl.adaptivity.xmlutil.serialization.XmlElement
@@ -17,27 +16,23 @@ private val logger = KotlinLogging.logger {}
 
 @Serializable
 @SerialName("informe")
-data class Informe(
+data class InformeDto(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
     @XmlElement(true)
-    val estadisticas: List<Estadistica>,
+    val estadisticas: List<EstadisticaDto>,
     @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 ) {
     companion object
 }
 
-fun Informe.Companion.writeToJsonFile(informe: Informe, jsonFile: File) {
-    logger.debug { "Escribiendo fichero JSON ${jsonFile.absolutePath}..." }
-    val json = Json { prettyPrint = true }
-    jsonFile.writeText(json.encodeToString(informe))
-    logger.debug { "Fichero JSON ${jsonFile.absolutePath} escrito exitosamente." }
-}
-
-fun Informe.Companion.writeToXmlFile(informe: Informe, xmlFile: File) {
+fun InformeDto.Companion.writeToXmlFile(informe: InformeDto, xmlFile: File) {
     logger.debug { "Escribiendo fichero XML ${xmlFile.absolutePath}..." }
-    val xml = XML { indentString = "  " }
+    val xml = XML {
+        indentString = "  "
+        autoPolymorphic = true
+    }
     xmlFile.writeText(xml.encodeToString(informe))
     logger.debug { "Fichero XML ${xmlFile.absolutePath} escrito exitosamente." }
 }
